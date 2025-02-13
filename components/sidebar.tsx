@@ -1,12 +1,16 @@
 import Image from "next/image";
+import { Switch } from "@/components/ui/switch";
 import logo from "@/assets/icons/logo-dark.svg";
 import boardIcon from "@/assets/icons/icon-board.svg";
 import lightThemeIcon from "@/assets/icons/icon-light-theme.svg";
 import darkThemeIcon from "@/assets/icons/icon-dark-theme.svg";
 import hideSidebarIcon from "@/assets/icons/icon-hide-sidebar.svg";
-import { Switch } from "@/components/ui/switch";
 
-export default function Sidebar() {
+interface SidebarProps {
+  showSideBar: () => void;
+}
+
+export default function Sidebar({ showSideBar }: SidebarProps) {
   return (
     <main className="bg-white w-80 h-screen p-8">
       <div className="flex items-center gap-2">
@@ -35,7 +39,10 @@ export default function Sidebar() {
           <Image src={darkThemeIcon} alt="" />
         </div>
 
-        <div className="flex items-center gap-1 mt-4">
+        <div
+          className="flex items-center gap-1 mt-4 cursor-pointer"
+          onClick={showSideBar}
+        >
           <Image src={hideSidebarIcon} alt="" />
           <p className="text-lighterBlue">Hide Sidebar</p>
         </div>

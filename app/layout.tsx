@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { SupabaseProvider } from "@/context/supbasecontext";
 
 const jakartaSana = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -18,8 +19,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${jakartaSana.variable} antialiased`}>{children}</body>
-    </html>
+    <SupabaseProvider>
+      <html lang="en">
+        <body className={`${jakartaSana.variable} antialiased`}>
+          {children}
+        </body>
+      </html>
+    </SupabaseProvider>
   );
 }

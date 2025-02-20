@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { useSupabase } from "@/context/supbasecontext";
 
 interface BoardFormProps {
   onSubmit: (name: string, columns: string[]) => void;
 }
 
 export default function BoardForm({ onSubmit }: BoardFormProps) {
+  const { supabase } = useSupabase();
   const [name, setName] = useState("");
   const [columns, setColumns] = useState<string[]>([""]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await createNewBoard();
     onSubmit(name, columns);
   };
 
@@ -26,6 +29,24 @@ export default function BoardForm({ onSubmit }: BoardFormProps) {
     const newColumns = [...columns];
     newColumns[index] = value;
     setColumns(newColumns);
+  };
+
+  const createNewBoard = async () => {
+    try {
+      const { data, error } = await supabase.from("boards").insert([
+        {
+          name,
+          columns,
+        },
+      ]);
+      if (error) {
+        console.error("Error creating new board", error);
+        return;
+      }
+      console.log("New board created", data);
+    } catch (error) {
+      console.error("Unexpected error creating new board", error);
+    }
   };
 
   return (
@@ -74,7 +95,10 @@ export default function BoardForm({ onSubmit }: BoardFormProps) {
         >
           + Add New Column
         </Button>
-        <Button className="w-full rounded-full text-xs font-bold text-white bg-strongBlue">
+        <Button
+          type="submit"
+          className="w-full rounded-full text-xs font-bold text-white bg-strongBlue"
+        >
           Create New Board
         </Button>
       </div>

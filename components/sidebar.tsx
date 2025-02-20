@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Switch } from "@/components/ui/switch";
 import Modal from "./modal";
@@ -11,20 +11,42 @@ import boardIcon from "@/assets/icons/icon-board.svg";
 import lightThemeIcon from "@/assets/icons/icon-light-theme.svg";
 import darkThemeIcon from "@/assets/icons/icon-dark-theme.svg";
 import hideSidebarIcon from "@/assets/icons/icon-hide-sidebar.svg";
-import { Button } from "./ui/button";
+import { useSupabase } from "@/context/supbasecontext";
 
 interface SidebarProps {
   showSideBar: () => void;
+  onBoardSelect: (boardId: string) => void;
 }
 
-export default function Sidebar({ showSideBar }: SidebarProps) {
+export default function Sidebar({ showSideBar, onBoardSelect }: SidebarProps) {
+  const { supabase } = useSupabase();
   const [isBoardModalVisible, setBoardModalVisible] = useState(false);
   const [isTaskModalVisible, setTaskModalVisible] = useState(false);
+  const [boards, setBoards] = useState<any[]>([]);
 
-  const handleCreateBoard = (name: string) => {
-    // Add logic to create a new board using Supabase
-    console.log("Creating board:", name);
-    setBoardModalVisible(false);
+  useEffect(() => {
+    fetchBoards();
+  }, []);
+
+  const fetchBoards = async () => {
+    const { data, error } = await supabase.from("boards").select("*");
+    if (error) {
+      console.error("Error fetching boards:", error);
+    } else {
+      setBoards(data);
+    }
+  };
+
+  const handleCreateBoard = async (name: string, columns: string[]) => {
+    const { data, error } = await supabase
+      .from("boards")
+      .insert([{ name, columns }]);
+    if (error) {
+      console.error("Error creating board:", error);
+    } else {
+      setBoards([...boards, { name, columns }]);
+      setBoardModalVisible(false);
+    }
   };
 
   const handleAddTask = (title: string, description: string) => {
@@ -42,23 +64,21 @@ export default function Sidebar({ showSideBar }: SidebarProps) {
       <div className="mt-10">
         <div>
           <p className="uppercase font-bold text-xs text-lighterBlue">
-            all boards (0)
+            all boards ({boards.length})
           </p>
         </div>
 
         <div className="space-y-6 mt-8">
-          <div className="flex items-center gap-2">
-            <Image src={boardIcon} alt="" />
-            <p className="text-lighterBlue">Platform Launch</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src={boardIcon} alt="" />
-            <p className="text-lighterBlue">Marketing Plan</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src={boardIcon} alt="" />
-            <p className="text-lighterBlue">Roadmap</p>
-          </div>
+          {boards.map((board, index) => (
+            <div
+              key={index}
+              onClick={() => onBoardSelect(board.id)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Image src={boardIcon} alt="" />
+              <p className="text-lighterBlue">{board.name}</p>
+            </div>
+          ))}
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setBoardModalVisible(true)}

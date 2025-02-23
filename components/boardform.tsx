@@ -2,20 +2,10 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { useSupabase } from "@/context/supbasecontext";
 
-interface BoardFormProps {
-  onSubmit: (name: string, columns: string[]) => void;
-}
-
-export default function BoardForm({ onSubmit }: BoardFormProps) {
-  const { supabase } = useSupabase();
+export default function BoardForm() {
+  const { supabase, setBoardModalVisible, fetchBoards } = useSupabase();
   const [name, setName] = useState("");
   const [columns, setColumns] = useState<string[]>([""]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await createNewBoard();
-    onSubmit(name, columns);
-  };
 
   const handleAddColumn = () => {
     setColumns([...columns, ""]);
@@ -31,26 +21,50 @@ export default function BoardForm({ onSubmit }: BoardFormProps) {
     setColumns(newColumns);
   };
 
-  const createNewBoard = async () => {
+  const createNewBoard = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const { data, error } = await supabase.from("boards").insert([
-        {
-          name,
-          columns,
-        },
-      ]);
-      if (error) {
-        console.error("Error creating new board", error);
+      console.log("Creating new board...");
+      const { data: boardData, error: boardError } = await supabase
+        .from("boards")
+        .insert([{ name }])
+        .select()
+        .single();
+      if (boardError) {
+        console.error("Error creating new board", boardError);
         return;
       }
-      console.log("New board created", data);
+
+      const boardId = boardData?.id;
+      console.log("Board ID:", boardId);
+      if (!boardId) {
+        console.error("Invalid board ID");
+        return;
+      }
+
+      const columnsData = columns.map((column) => ({
+        name: column,
+        board_id: boardId,
+      }));
+
+      const { error: columnsError } = await supabase
+        .from("columns")
+        .insert(columnsData);
+      if (columnsError) {
+        console.error("Error creating columns for new board", columnsError);
+        return;
+      }
+
+      console.log("New board and columns created", boardData);
+      await fetchBoards();
     } catch (error) {
       console.error("Unexpected error creating new board", error);
     }
+    setBoardModalVisible(false);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={createNewBoard}>
       <h2 className="text-lg font-bold mb-4 text-darkGrey">Add New Board</h2>
       <div className="mb-4">
         <label className="block text-xs font-bold text-lighterBlue">Name</label>

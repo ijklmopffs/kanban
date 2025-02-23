@@ -56,7 +56,7 @@ export default function Home() {
               Add New Column
             </Button>
           </div>
-        )}{" "}
+        )}
       </div>
     </main>
   );

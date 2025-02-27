@@ -24,23 +24,25 @@ export default function Home() {
 
   return (
     <main className="bg-lightPurple flex h-screen">
-      {sideBar && (
+      <div className={`${sideBar ? "" : "hidden"} flex`}>
         <Sidebar showSideBar={showSideBar} onBoardSelect={handleBoardSelect} />
-      )}
+      </div>
 
-      {!sideBar && (
-        <div className="flex flex-col justify-between h-4/5">
-          <div className="bg-white p-9">
-            <Image src={logo} alt="" />
-          </div>
-          <div
-            className="bg-strongBlue rounded-full w-fit p-3 rounded-tl-none rounded-bl-none cursor-pointer"
-            onClick={showSideBar}
-          >
-            <Image src={openSidebar} alt="" />
-          </div>
+      <div
+        className={`flex flex-col justify-between h-4/5 ${
+          sideBar ? "hidden" : "absolute"
+        }`}
+      >
+        <div className="bg-white p-8">
+          <Image src={logo} alt="" />
         </div>
-      )}
+        <div
+          className="bg-strongBlue rounded-full w-fit p-3 rounded-tl-none rounded-bl-none cursor-pointer"
+          onClick={showSideBar}
+        >
+          <Image src={openSidebar} alt="" />
+        </div>
+      </div>
 
       <div className="w-full">
         <Navbar />

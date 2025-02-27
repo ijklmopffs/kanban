@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSupabase } from "@/context/supbasecontext";
 import { Button } from "./ui/button";
 import addIcon from "@/assets/icons/icon-add-task-mobile.svg";
+import Task from "./task";
 
 interface ColumnProps {
   boardId: string;
@@ -17,12 +18,32 @@ interface Task {
   id: string;
   title: string;
   description: string;
+  column_id: string;
 }
 
 export default function Column({ boardId }: ColumnProps) {
   const { supabase } = useSupabase();
   const [columns, setColumns] = useState<Column[]>([]);
   const [tasks, setTasks] = useState<{ [key: string]: Task[] }>({});
+
+  const fetchTasks = useCallback(
+    async (columns: Column[]) => {
+      const tasksByColumn: { [key: string]: Task[] } = {};
+      for (const column of columns) {
+        const { data, error } = await supabase
+          .from("tasks")
+          .select("*")
+          .eq("column_id", column.id);
+        if (error) {
+          console.error(`Error fetching tasks for column ${column.id}:`, error);
+        } else {
+          tasksByColumn[column.id] = data;
+        }
+      }
+      setTasks(tasksByColumn);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
     const fetchColumns = async () => {
@@ -38,24 +59,8 @@ export default function Column({ boardId }: ColumnProps) {
       }
     };
 
-    const fetchTasks = async (columns: Column[]) => {
-      const tasksByColumn: { [key: string]: Task[] } = {};
-      for (const column of columns) {
-        const { data, error } = await supabase
-          .from("tasks")
-          .select("*")
-          .eq("column_id", column.id);
-        if (error) {
-          console.error(`Error fetching tasks for column ${column.id}:`, error);
-        } else {
-          tasksByColumn[column.id] = data;
-        }
-      }
-      setTasks(tasksByColumn);
-    };
-
     fetchColumns();
-  }, [boardId, supabase]);
+  }, [boardId, supabase, fetchTasks]);
 
   const handleAddColumn = async () => {
     const columnName = prompt("Enter column name:");
@@ -74,7 +79,7 @@ export default function Column({ boardId }: ColumnProps) {
 
   return (
     <div>
-      <div>
+      <div className="flex justify-between p-4">
         {columns.length === 0 ? (
           <div className="mx-auto w-fit items-center flex flex-col h-4/5 justify-center">
             <p className="text-lighterBlue font-bold text-lg">
@@ -87,25 +92,28 @@ export default function Column({ boardId }: ColumnProps) {
           </div>
         ) : (
           columns.map((column) => (
-            <div key={column.id}>
-              <h2>{column.name}</h2>
+            <div key={column.id} className="w-72">
+              <h2 className="font-bold text-xs text-lighterBlue uppercase">
+                {column.name}
+              </h2>
               {tasks[column.id]?.map((task) => (
-                <div key={task.id}>
-                  <h3>{task.title}</h3>
-                  <p>{task.description}</p>
-                </div>
+                <Task
+                  key={task.id}
+                  id={task.id}
+                  title={task.title}
+                  // description={task.description}
+                />
               ))}
-              {/* Add functionality to add tasks here */}
             </div>
           ))
         )}
-        <Button
-          className="rounded-full bg-strongBlue p-2 mx-auto mt-4"
+        <div
+          className="flex items-center gap-2 bg-lightBlue w-72 justify-center h-[80vh] mt-10 cursor-pointer"
           onClick={handleAddColumn}
         >
           <Image src={addIcon} alt="" />
-          Add New Column
-        </Button>
+          <p className="font-bold text-2xl text-lighterBlue">New Column</p>
+        </div>
       </div>
     </div>
   );

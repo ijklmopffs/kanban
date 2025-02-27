@@ -120,7 +120,7 @@ export default function Sidebar({ showSideBar, onBoardSelect }: SidebarProps) {
         isVisible={isTaskModalVisible}
         onClose={() => setTaskModalVisible(false)}
       >
-        <TaskForm onSubmit={handleAddTask} />
+        <TaskForm onSubmit={handleAddTask} boardId={selectedBoardId} />
       </Modal>
     </main>
   );
